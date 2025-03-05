@@ -1,4 +1,27 @@
 {
   "name": "base-mcp",
-  "packageManager": "yarn@4.5.1"
+  "bin": {
+    "weather": "./build/index.js"
+  },
+  "scripts": {
+    "run": "tsx src/index.ts",
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\""
+  },
+  "files": [
+    "build"
+  ],
+  "packageManager": "yarn@4.5.1",
+  "dependencies": {
+    "@coinbase/coinbase-sdk": "^0.21.0",
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
 }
