@@ -146,7 +146,8 @@ _Claude uses the `erc20_transfer` tool with the following parameters:_
 
 **Claude:** I'll check what NFTs are owned by that address.
 
-*Claude uses the `list_nfts` tool with the following parameters:*
+_Claude uses the `list_nfts` tool with the following parameters:_
+
 - ownerAddress: 0x89A93a48C6Ef8085B9d07e46AaA96DFDeC717040
 
 **Claude:** I found 1 NFT owned by 0x89A93a48C6Ef8085B9d07e46AaA96DFDeC717040:
@@ -161,7 +162,8 @@ _Claude uses the `erc20_transfer` tool with the following parameters:_
 
 **Claude:** I'll set up that NFT transfer for you.
 
-*Claude uses the `transfer_nft` tool with the following parameters:*
+_Claude uses the `transfer_nft` tool with the following parameters:_
+
 - contractAddress: 0x3F06FcF75f45F1bb61D56D68fA7b3F32763AA15c
 - tokenId: 56090175025510453004781233574040052668718235229192064098345825090519343038548
 - toAddress: 0x1234567890abcdef1234567890abcdef12345678

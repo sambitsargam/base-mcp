@@ -1,6 +1,6 @@
-import { PublicActions } from "viem";
-import { erc721Abi } from "../contracts/erc721.js";
-import { erc1155Abi } from "../contracts/erc1155.js";
+import { PublicActions } from 'viem';
+import { erc721Abi } from '../contracts/erc721.js';
+import { erc1155Abi } from '../contracts/erc1155.js';
 
 /**
  * Detect if a contract is ERC721 or ERC1155 by checking if it supports the respective interface ID
@@ -10,37 +10,40 @@ import { erc1155Abi } from "../contracts/erc1155.js";
  */
 export async function detectNftStandard(
   wallet: PublicActions,
-  contractAddress: string
-): Promise<"ERC721" | "ERC1155" | "UNKNOWN"> {
+  contractAddress: string,
+): Promise<'ERC721' | 'ERC1155' | 'UNKNOWN'> {
   try {
     // ERC721 interface ID: 0x80ac58cd
     const isErc721 = await wallet.readContract({
       address: contractAddress as `0x${string}`,
       abi: erc721Abi,
-      functionName: "supportsInterface",
-      args: ["0x80ac58cd"],
+      functionName: 'supportsInterface',
+      args: ['0x80ac58cd'],
     });
 
     if (isErc721) {
-      return "ERC721";
+      return 'ERC721';
     }
 
     // ERC1155 interface ID: 0xd9b67a26
     const isErc1155 = await wallet.readContract({
       address: contractAddress as `0x${string}`,
       abi: erc1155Abi,
-      functionName: "supportsInterface",
-      args: ["0xd9b67a26"],
+      functionName: 'supportsInterface',
+      args: ['0xd9b67a26'],
     });
 
     if (isErc1155) {
-      return "ERC1155";
+      return 'ERC1155';
     }
 
-    return "UNKNOWN";
+    return 'UNKNOWN';
   } catch (error) {
-    console.error(`Error detecting NFT standard for ${contractAddress}:`, error);
-    return "UNKNOWN";
+    console.error(
+      `Error detecting NFT standard for ${contractAddress}:`,
+      error,
+    );
+    return 'UNKNOWN';
   }
 }
 
@@ -52,33 +55,39 @@ export async function detectNftStandard(
  */
 export async function fetchNftsFromAlchemy(
   ownerAddress: string,
-  limit: number = 50
-): Promise<any> {
+  limit: number = 50,
+): Promise<Record<string, unknown>> {
   const apiKey = process.env.ALCHEMY_API_KEY;
-  
+
   if (!apiKey) {
-    throw new Error("ALCHEMY_API_KEY is not set in environment variables");
+    throw new Error('ALCHEMY_API_KEY is not set in environment variables');
   }
-  
+
   try {
-    console.log(`Fetching NFTs for address: ${ownerAddress} with limit: ${limit}`);
-    
-    const baseUrl = "https://base-mainnet.g.alchemy.com/nft/v3";
+    console.info(
+      `Fetching NFTs for address: ${ownerAddress} with limit: ${limit}`,
+    );
+
+    const baseUrl = 'https://base-mainnet.g.alchemy.com/nft/v3';
     const url = `${baseUrl}/${apiKey}/getNFTsForOwner?owner=${ownerAddress}&withMetadata=true&pageSize=${limit}`;
-    
-    console.log(`Making request to: ${baseUrl}/${apiKey.substring(0, 3)}...`);
-    
+
+    console.info(`Making request to: ${baseUrl}/${apiKey.substring(0, 3)}...`);
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Alchemy API error (${response.status}): ${errorText}`);
-      throw new Error(`Alchemy API error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Alchemy API error: ${response.status} ${response.statusText}`,
+      );
     }
-    
+
     const data = await response.json();
-    console.log(`Received ${data.ownedNfts?.length || 0} NFTs from Alchemy API`);
-    
+    console.info(
+      `Received ${data.ownedNfts?.length || 0} NFTs from Alchemy API`,
+    );
+
     return data;
   } catch (error) {
     console.error(`Error fetching NFTs from Alchemy:`, error);
@@ -91,19 +100,37 @@ export async function fetchNftsFromAlchemy(
  * @param nftData The raw NFT data from Alchemy API
  * @returns Formatted NFT data
  */
-export function formatNftData(nftData: any): any[] {
+// Define a more specific type for NFT data
+type NftData = {
+  contract?: { address?: string };
+  tokenId?: string;
+  id?: { tokenId?: string };
+  title?: string;
+  name?: string;
+  description?: string;
+  tokenType?: string;
+  media?: Array<{ gateway?: string; raw?: string }>;
+  image?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export function formatNftData(
+  nftData: Record<string, unknown>,
+): Array<Record<string, unknown>> {
   if (!nftData || !nftData.ownedNfts || !Array.isArray(nftData.ownedNfts)) {
     return [];
   }
 
-  return nftData.ownedNfts.map((nft: any) => {
+  const ownedNfts = nftData.ownedNfts as Array<NftData>;
+  return ownedNfts.map((nft) => {
     return {
-      contractAddress: nft.contract?.address || "",
-      tokenId: nft.tokenId || nft.id?.tokenId || "",
-      title: nft.title || nft.name || "Unnamed NFT",
-      description: nft.description || "",
-      tokenType: nft.tokenType || "UNKNOWN",
-      imageUrl: nft.media?.[0]?.gateway || nft.media?.[0]?.raw || nft.image || "",
+      contractAddress: nft.contract?.address || '',
+      tokenId: nft.tokenId || nft.id?.tokenId || '',
+      title: nft.title || nft.name || 'Unnamed NFT',
+      description: nft.description || '',
+      tokenType: nft.tokenType || 'UNKNOWN',
+      imageUrl:
+        nft.media?.[0]?.gateway || nft.media?.[0]?.raw || nft.image || '',
       metadata: nft.metadata || {},
     };
   });

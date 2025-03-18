@@ -1,7 +1,11 @@
-import { PublicActions, WalletClient } from "viem";
-import { detectNftStandard, fetchNftsFromAlchemy, formatNftData } from "./utils.js";
-import { erc721Abi } from "../contracts/erc721.js";
-import { erc1155Abi } from "../contracts/erc1155.js";
+import { PublicActions, WalletClient } from 'viem';
+import { erc721Abi } from '../contracts/erc721.js';
+import { erc1155Abi } from '../contracts/erc1155.js';
+import {
+  detectNftStandard,
+  fetchNftsFromAlchemy,
+  formatNftData,
+} from './utils.js';
 
 /**
  * List NFTs owned by a specific address
@@ -13,19 +17,21 @@ import { erc1155Abi } from "../contracts/erc1155.js";
 export async function listNfts(
   wallet: PublicActions,
   ownerAddress: string,
-  limit: number = 50
-): Promise<any[]> {
+  limit: number = 50,
+): Promise<Array<Record<string, unknown>>> {
   try {
     // Fetch NFTs from Alchemy API
     const nftData = await fetchNftsFromAlchemy(ownerAddress, limit);
-    
+
     // Format the NFT data
     const formattedNfts = formatNftData(nftData);
-    
+
     return formattedNfts;
   } catch (error) {
     console.error(`Error listing NFTs for ${ownerAddress}:`, error);
-    throw new Error(`Failed to list NFTs: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to list NFTs: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -43,52 +49,59 @@ export async function transferNft(
   contractAddress: string,
   tokenId: string,
   toAddress: string,
-  amount: string = "1"
+  amount: string = '1',
 ): Promise<string> {
   try {
     // Detect the NFT standard
     const nftStandard = await detectNftStandard(wallet, contractAddress);
-    
-    if (nftStandard === "UNKNOWN") {
-      throw new Error(`Contract at ${contractAddress} does not implement a supported NFT standard`);
+
+    if (nftStandard === 'UNKNOWN') {
+      throw new Error(
+        `Contract at ${contractAddress} does not implement a supported NFT standard`,
+      );
     }
-    
+
     // Get the wallet address
     const [fromAddress] = await wallet.getAddresses();
-    
+
     // Convert addresses and values to the correct format
     const contractAddressHex = contractAddress as `0x${string}`;
     const toAddressHex = toAddress as `0x${string}`;
     const tokenIdBigInt = BigInt(tokenId);
     const amountBigInt = BigInt(amount);
-    
+
     let hash: `0x${string}`;
-    
-    if (nftStandard === "ERC721") {
+
+    if (nftStandard === 'ERC721') {
       // Transfer ERC721 NFT
       hash = await wallet.writeContract({
         address: contractAddressHex,
         abi: erc721Abi,
-        functionName: "safeTransferFrom",
+        functionName: 'safeTransferFrom',
         args: [fromAddress, toAddressHex, tokenIdBigInt],
         chain: null,
-        account: fromAddress
+        account: fromAddress,
       });
     } else {
       // Transfer ERC1155 NFT
       hash = await wallet.writeContract({
         address: contractAddressHex,
         abi: erc1155Abi,
-        functionName: "safeTransferFrom",
-        args: [fromAddress, toAddressHex, tokenIdBigInt, amountBigInt, "0x"],
+        functionName: 'safeTransferFrom',
+        args: [fromAddress, toAddressHex, tokenIdBigInt, amountBigInt, '0x'],
         chain: null,
-        account: fromAddress
+        account: fromAddress,
       });
     }
-    
+
     return hash;
   } catch (error) {
-    console.error(`Error transferring NFT ${tokenId} from contract ${contractAddress}:`, error);
-    throw new Error(`Failed to transfer NFT: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error transferring NFT ${tokenId} from contract ${contractAddress}:`,
+      error,
+    );
+    throw new Error(
+      `Failed to transfer NFT: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }

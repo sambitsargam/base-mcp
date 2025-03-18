@@ -184,7 +184,7 @@ To add this MCP server to Claude Desktop:
            "SEED_PHRASE": "your seed phrase here",
            "COINBASE_PROJECT_ID": "your_project_id",
            "ALCHEMY_API_KEY": "your_alchemy_api_key",
-            "OPENROUTER_API_KEY": "your_openrouter_api_key"
+           "OPENROUTER_API_KEY": "your_openrouter_api_key"
          },
          "disabled": false,
          "autoApprove": []
@@ -388,6 +388,7 @@ If you encounter issues:
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 For detailed guidelines on contributing to Base MCP, including:
+
 - Reporting bugs
 - Suggesting enhancements
 - Development setup
