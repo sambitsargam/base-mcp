@@ -170,14 +170,16 @@ To add this MCP server to Claude Desktop:
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
    - Linux: `~/.config/Claude/claude_desktop_config.json`
 
+You can easily access this file via the Claude Desktop app by navigating to Claude > Settings > Developer > Edit Config.
+
 2. Add the following configuration:
 
    ```json
    {
      "mcpServers": {
        "base-mcp": {
-         "command": "node",
-         "args": ["/path/to/base-mcp/build/index.js"],
+         "command": "npx",
+         "args": ["base-mcp@latest"],
          "env": {
            "COINBASE_API_KEY_NAME": "your_api_key_name",
            "COINBASE_API_PRIVATE_KEY": "your_private_key",
