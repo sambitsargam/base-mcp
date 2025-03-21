@@ -36,6 +36,7 @@ async function main() {
   const seedPhrase = process.env.SEED_PHRASE;
   const chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : base.id;
 
+  // TODO: stricter checks for required env vars with better error messaging
   if (!apiKeyName || !privateKey || !seedPhrase) {
     console.error(
       'Please set COINBASE_API_KEY_NAME, COINBASE_API_PRIVATE_KEY, and SEED_PHRASE environment variables',
