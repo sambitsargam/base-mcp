@@ -5,7 +5,7 @@
   "bin": "./build/index.js",
   "type": "module",
   "scripts": {
-    "run": "ts-node src/index.ts",
+    "run": "tsx src/index.ts",
     "dev": "tsc --watch",
     "build": "tsc",
     "lint": "eslint src",
@@ -34,11 +34,14 @@
   "license": "MIT",
   "packageManager": "yarn@4.5.1",
   "dependencies": {
+    "@clack/prompts": "^0.10.0",
     "@coinbase/agentkit": "^0.4.0",
     "@coinbase/agentkit-model-context-protocol": "^0.2.0",
     "@coinbase/coinbase-sdk": "^0.21.0",
     "@coinbase/onchainkit": "^0.37.6",
+    "@inquirer/prompts": "^7.4.0",
     "@modelcontextprotocol/sdk": "^1.6.1",
+    "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
     "graphql": "^16.10.0",
     "graphql-request": "^7.1.2",
@@ -49,6 +52,7 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "@types/express": "^4",
     "@types/node": "^22.13.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -61,7 +65,7 @@
     "prettier": "^3.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1",
     "zod-to-json-schema": "^3.24.4"
