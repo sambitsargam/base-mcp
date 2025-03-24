@@ -114,10 +114,7 @@ export async function init() {
 
   const clients = await multiselect({
     message: 'Which clients would you like to configure?',
-    options: [
-      { label: 'Claude', value: 'claude' },
-      { label: 'Cursor', value: 'cursor' },
-    ],
+    options: [{ label: 'Claude', value: 'claude' }],
   });
 
   if (!keys.seedPhrase) {
