@@ -3,7 +3,12 @@ import { listNftsHandler, transferNftHandler } from './handlers.js';
 import { ListNftsSchema, TransferNftSchema } from './schemas.js';
 
 // Re-export utility functions for use elsewhere in the codebase
-export { fetchNftsFromAlchemy, formatNftData, detectNftStandard, transferNft } from './utils.js';
+export {
+  fetchNftsFromAlchemy,
+  formatNftData,
+  detectNftStandard,
+  transferNft,
+} from './utils.js';
 
 export const listNftsTool = generateTool({
   name: 'list_nfts',

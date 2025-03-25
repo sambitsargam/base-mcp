@@ -3,6 +3,7 @@ import { base } from 'viem/chains';
 import type { z } from 'zod';
 import { constructBaseScanUrl } from '../utils/index.js';
 import { ListNftsSchema, TransferNftSchema } from './schemas.js';
+
 // All functions will be dynamically imported to avoid circular dependencies
 
 export async function listNftsHandler(
@@ -17,16 +18,16 @@ export async function listNftsHandler(
 
     // Import the listNfts function dynamically to avoid circular dependencies
     const { fetchNftsFromAlchemy, formatNftData } = await import('./utils.js');
-    
+
     // Fetch NFTs from Alchemy API
     const nftData = await fetchNftsFromAlchemy({
       ownerAddress: args.ownerAddress,
-      limit: args.limit
+      limit: args.limit,
     });
-    
+
     // Format the NFT data
     const nfts = formatNftData({
-      nftData
+      nftData,
     });
 
     // Format the result
@@ -66,7 +67,7 @@ export async function transferNftHandler(
 
     // Import the transferNft function dynamically to avoid circular dependencies
     const { transferNft } = await import('./utils.js');
-    
+
     // Execute the transfer
     const txHash = await transferNft({
       wallet,
@@ -77,10 +78,7 @@ export async function transferNftHandler(
     });
 
     // Construct transaction URL
-    const txUrl = constructBaseScanUrl(
-      wallet.chain ?? base,
-      txHash,
-    );
+    const txUrl = constructBaseScanUrl(wallet.chain ?? base, txHash);
 
     return `NFT transfer initiated!\n\nTransaction: ${txUrl}\n\nPlease wait for the transaction to be confirmed.`;
   } catch (error) {

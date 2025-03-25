@@ -105,7 +105,8 @@ export async function fetchNftsFromAlchemy(params: {
 }): Promise<Record<string, unknown>> {
   const { ownerAddress, limit = 50 } = params;
   // Access environment variables safely
-  const apiKey = typeof process !== 'undefined' ? process.env.ALCHEMY_API_KEY : undefined;
+  const apiKey =
+    typeof process !== 'undefined' ? process.env.ALCHEMY_API_KEY : undefined;
 
   if (!apiKey) {
     throw new Error('ALCHEMY_API_KEY is not set in environment variables');
@@ -146,14 +147,14 @@ export async function transferNft(params: {
   amount?: string;
 }): Promise<`0x${string}`> {
   const { wallet, contractAddress, tokenId, toAddress, amount = '1' } = params;
-  
+
   try {
     // Detect the NFT standard
     const nftStandard = await detectNftStandard(wallet, contractAddress);
 
     if (nftStandard === 'UNKNOWN') {
       throw new Error(
-        `Contract at ${contractAddress} does not implement a supported NFT standard`
+        `Contract at ${contractAddress} does not implement a supported NFT standard`,
       );
     }
 
@@ -198,10 +199,10 @@ export async function transferNft(params: {
   } catch (error) {
     console.error(
       `Error transferring NFT ${tokenId} from contract ${contractAddress}:`,
-      error
+      error,
     );
     throw new Error(
-      `Failed to transfer NFT: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to transfer NFT: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
