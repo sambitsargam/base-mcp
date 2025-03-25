@@ -3,24 +3,31 @@ import { base } from 'viem/chains';
 import type { z } from 'zod';
 import { constructBaseScanUrl } from '../utils/index.js';
 import { ListNftsSchema, TransferNftSchema } from './schemas.js';
+// All functions will be dynamically imported to avoid circular dependencies
 
 export async function listNftsHandler(
   wallet: WalletClient & PublicActions,
   args: z.infer<typeof ListNftsSchema>,
 ): Promise<string> {
   try {
-    // Import the listNfts function dynamically to avoid circular dependencies
-    const { listNfts } = await import('../../lib/nft/index.js');
-
     // Validate owner address
     if (!isAddress(args.ownerAddress)) {
       throw new Error(`Invalid owner address: ${args.ownerAddress}`);
     }
 
-    console.info(`Listing NFTs for address: ${args.ownerAddress}`);
-
-    // Get NFTs for the address
-    const nfts = await listNfts(wallet, args.ownerAddress, args.limit);
+    // Import the listNfts function dynamically to avoid circular dependencies
+    const { fetchNftsFromAlchemy, formatNftData } = await import('./utils.js');
+    
+    // Fetch NFTs from Alchemy API
+    const nftData = await fetchNftsFromAlchemy({
+      ownerAddress: args.ownerAddress,
+      limit: args.limit
+    });
+    
+    // Format the NFT data
+    const nfts = formatNftData({
+      nftData
+    });
 
     // Format the result
     if (nfts.length === 0) {
@@ -48,9 +55,6 @@ export async function transferNftHandler(
   args: z.infer<typeof TransferNftSchema>,
 ): Promise<string> {
   try {
-    // Import the transferNft function dynamically to avoid circular dependencies
-    const { transferNft } = await import('../../lib/nft/index.js');
-
     // Validate addresses
     if (!isAddress(args.contractAddress)) {
       throw new Error(`Invalid contract address: ${args.contractAddress}`);
@@ -60,23 +64,22 @@ export async function transferNftHandler(
       throw new Error(`Invalid recipient address: ${args.toAddress}`);
     }
 
-    console.info(
-      `Transferring NFT ${args.tokenId} from contract ${args.contractAddress} to ${args.toAddress}`,
-    );
-
+    // Import the transferNft function dynamically to avoid circular dependencies
+    const { transferNft } = await import('./utils.js');
+    
     // Execute the transfer
-    const txHash = await transferNft(
+    const txHash = await transferNft({
       wallet,
-      args.contractAddress,
-      args.tokenId,
-      args.toAddress,
-      args.amount,
-    );
+      contractAddress: args.contractAddress,
+      tokenId: args.tokenId,
+      toAddress: args.toAddress,
+      amount: args.amount,
+    });
 
     // Construct transaction URL
     const txUrl = constructBaseScanUrl(
       wallet.chain ?? base,
-      txHash as `0x${string}`,
+      txHash,
     );
 
     return `NFT transfer initiated!\n\nTransaction: ${txUrl}\n\nPlease wait for the transaction to be confirmed.`;
