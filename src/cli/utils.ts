@@ -1,3 +1,7 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
 export function isUuid(value: string) {
   return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
     value,
@@ -31,8 +35,24 @@ export function validateMnemonic(value: string) {
     return 'Mnemonic contains invalid characters. Only letters and spaces are allowed.';
   }
 
-  // For a more thorough validation, you'd typically use a BIP39 library
-  // This is a basic validation - in production, consider using a library like bip39
-
   return true;
 }
+
+export type ConfigureMcpClientOptions = {
+  cdpKeyId: string;
+  cdpSecret: string;
+  mnemonicPhrase: string;
+  optionalKeys: Record<string, string>;
+};
+
+type SupportedClient = 'claude' | 'cursor';
+
+type RootConfig = {
+  envVars: Record<string, string>;
+  clients: SupportedClient[];
+};
+
+export const writeRootConfig = (config: RootConfig) => {
+  const configPath = path.join(os.homedir(), '.base-mcp');
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+};

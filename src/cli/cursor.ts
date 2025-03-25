@@ -2,24 +2,15 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { confirm, log } from '@clack/prompts';
-import { ConfigureMcpClientOptions } from './utils.js';
+import type { ConfigureMcpClientOptions } from './utils.js';
 
-/**
- * Configures Base MCP server for Claude Desktop.
- */
-export async function configureClaude({
+export async function configureCursor({
   cdpKeyId,
   cdpSecret,
   mnemonicPhrase,
   optionalKeys,
 }: ConfigureMcpClientOptions) {
-  const claudeConfigPath = path.join(
-    os.homedir(),
-    'Library',
-    'Application Support',
-    'Claude',
-    'claude_desktop_config.json',
-  );
+  const cursorConfigPath = path.join(os.homedir(), '.cursor', 'mcp.json');
 
   const baseMcpConfig = {
     command: 'base-mcp',
@@ -32,15 +23,15 @@ export async function configureClaude({
     },
   };
 
-  if (fs.existsSync(claudeConfigPath)) {
+  if (fs.existsSync(cursorConfigPath)) {
     const existingConfig = JSON.parse(
-      fs.readFileSync(claudeConfigPath, 'utf8'),
+      fs.readFileSync(cursorConfigPath, 'utf8'),
     );
 
     if ('mcpServers' in existingConfig && 'base' in existingConfig.mcpServers) {
       const shouldOverwrite = await confirm({
         message:
-          'Base MCP is already configured in Claude Desktop. Would you like to overwrite it?',
+          'Base MCP is already configured in Cursor. Would you like to overwrite it?',
       });
 
       if (!shouldOverwrite) {
@@ -57,8 +48,8 @@ export async function configureClaude({
       },
     };
 
-    fs.writeFileSync(claudeConfigPath, JSON.stringify(newConfig, null, 2));
-    log.success('✓ Base MCP configured for Claude Desktop.');
+    fs.writeFileSync(cursorConfigPath, JSON.stringify(newConfig, null, 2));
+    log.success('✓ Base MCP configured for Cursor.');
   } else {
     const config = {
       mcpServers: {
@@ -66,7 +57,7 @@ export async function configureClaude({
       },
     };
 
-    fs.writeFileSync(claudeConfigPath, JSON.stringify(config, null, 2));
-    log.success('✓ Base MCP configured for Claude Desktop.');
+    fs.writeFileSync(cursorConfigPath, JSON.stringify(config, null, 2));
+    log.success('✓ Base MCP configured for Cursor.');
   }
 }

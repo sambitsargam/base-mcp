@@ -30,8 +30,10 @@ import { version } from './version.js';
 
 export async function main() {
   dotenv.config();
-  const apiKeyName = process.env.COINBASE_API_KEY_NAME;
-  const privateKey = process.env.COINBASE_API_PRIVATE_KEY;
+  const apiKeyName =
+    process.env.COINBASE_API_KEY_ID || process.env.COINBASE_API_KEY_NAME; // Previously, was called COINBASE_API_KEY_NAME
+  const privateKey =
+    process.env.COINBASE_API_SECRET || process.env.COINBASE_API_PRIVATE_KEY; // Previously, was called COINBASE_API_PRIVATE_KEY
   const seedPhrase = process.env.SEED_PHRASE;
   const chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : base.id;
 

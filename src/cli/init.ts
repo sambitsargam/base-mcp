@@ -1,10 +1,18 @@
 // CLI tool for initializing a new MCP server in various apps (Claude, etc.)
 
-import { group, log, multiselect, text } from '@clack/prompts';
+import {
+  group,
+  isCancel,
+  log,
+  multiselect,
+  password,
+  text,
+} from '@clack/prompts';
 import chalk from 'chalk';
 import { english, generateMnemonic } from 'viem/accounts';
 import { configureClaude } from './claude.js';
-import { isUuid, validateMnemonic } from './utils.js';
+import { configureCursor } from './cursor.js';
+import { isUuid, validateMnemonic, writeRootConfig } from './utils.js';
 
 type ToolWithKeys = {
   name: string;
@@ -51,33 +59,43 @@ export async function init() {
     'Obtain Coinbase Developer Platform (CDP) API keys at https://portal.cdp.coinbase.com/projects/api-keys.',
   );
 
-  const keys = await group({
-    cdpKeyId: () =>
-      text({
-        message: 'CDP Key ID:',
-        validate: (value) => {
-          if (!value) return 'Enter a valid CDP Key ID';
-          if (!isUuid(value)) return 'Invalid API Key ID';
-        },
-      }),
-    cdpSecret: () =>
-      text({
-        message: 'CDP Secret:',
-        validate: (value) => {
-          if (!value) return 'Enter a valid CDP Secret';
-        },
-      }),
-    seedPhrase: () =>
-      text({
-        message:
-          'Mnemonic Phrase (optional, will generate a new one if not provided):',
-        validate: (value) => {
-          if (value) {
-            return validateMnemonic(value) ? value : 'Invalid Mnemonic Phrase';
-          }
-        },
-      }),
-  });
+  const keys = await group(
+    {
+      cdpKeyId: () =>
+        password({
+          message: 'CDP Key ID:',
+          validate: (value) => {
+            if (!value) return 'Enter a valid CDP Key ID';
+            if (!isUuid(value)) return 'Invalid API Key ID';
+          },
+        }),
+      cdpSecret: () =>
+        password({
+          message: 'CDP Secret:',
+          validate: (value) => {
+            if (!value) return 'Enter a valid CDP Secret';
+          },
+        }),
+      seedPhrase: () =>
+        password({
+          message:
+            'Mnemonic Phrase (optional, will generate a new one if not provided):',
+          validate: (value) => {
+            if (value) {
+              if (!validateMnemonic(value)) {
+                return 'Invalid Mnemonic Phrase';
+              }
+            }
+          },
+        }),
+    },
+    {
+      onCancel: () => {
+        log.message('Exiting...');
+        process.exit(0);
+      },
+    },
+  );
 
   const optionalKeys = await multiselect({
     message: 'Would you like to configure additional integrations?',
@@ -85,7 +103,13 @@ export async function init() {
       label: tool.name,
       value: tool.name,
     })),
+    required: false,
   });
+
+  if (isCancel(optionalKeys)) {
+    log.message('Exiting...');
+    process.exit(0);
+  }
 
   let otherKeys: Record<string, string> = {};
   // Collect other keys the user wants to configure
@@ -114,17 +138,45 @@ export async function init() {
 
   const clients = await multiselect({
     message: 'Which clients would you like to configure?',
-    options: [{ label: 'Claude', value: 'claude' }],
+    options: [
+      { label: 'Claude', value: 'claude' },
+      { label: 'Cursor', value: 'cursor' },
+    ],
   });
+
+  if (isCancel(clients)) {
+    log.message('Exiting...');
+    process.exit(0);
+  }
 
   if (!keys.seedPhrase) {
     keys.seedPhrase = generateMnemonic(english, 256);
   }
 
+  // Set up root config file
+  writeRootConfig({
+    envVars: {
+      ...keys,
+      ...otherKeys,
+    },
+    clients: Array.isArray(clients) ? clients : [],
+  });
+
   if (Array.isArray(clients) && clients.includes('claude')) {
     log.step('Configuring Claude');
 
     await configureClaude({
+      cdpKeyId: keys.cdpKeyId,
+      cdpSecret: keys.cdpSecret,
+      mnemonicPhrase: keys.seedPhrase,
+      optionalKeys: otherKeys,
+    });
+  }
+
+  if (Array.isArray(clients) && clients.includes('cursor')) {
+    log.step('Configuring Cursor');
+
+    await configureCursor({
       cdpKeyId: keys.cdpKeyId,
       cdpSecret: keys.cdpSecret,
       mnemonicPhrase: keys.seedPhrase,
