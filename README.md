@@ -91,6 +91,12 @@ npm install -g base-mcp
 npm install base-mcp
 ```
 
+Once the package is installed, you can configure clients with the following command:
+
+```bash
+base-mcp --init
+```
+
 ### Option 2: Install from Source
 
 1. Clone this repository:

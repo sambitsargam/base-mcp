@@ -21,9 +21,6 @@ export default [
   },
   {
     rules: {
-      // Disallow console.log but allow console.error, console.warn, and console.info
-      'no-console': ['error', { allow: ['error', 'warn', 'info'] }],
-
       // TypeScript specific rules
       '@typescript-eslint/no-unused-vars': [
         'error',
