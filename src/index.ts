@@ -2,6 +2,7 @@
 import { parseArgs } from 'node:util';
 import { init } from './cli/init.js';
 import { main } from './main.js';
+import { version } from './version.js';
 
 process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
@@ -41,7 +42,7 @@ Options:
 }
 
 if (values.version) {
-  console.log(process.env.npm_package_version || 'unknown');
+  console.log(version);
   process.exit(0);
 }
 
