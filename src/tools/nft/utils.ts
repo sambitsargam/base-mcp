@@ -1,33 +1,35 @@
-import { PublicActions, WalletClient } from 'viem';
-import { erc721Abi } from '../../lib/contracts/erc721.js';
+import { erc721Abi as viem_erc721Abi } from 'viem';
+import type { PublicActions } from 'viem';
 import { erc1155Abi } from '../../lib/contracts/erc1155.js';
+import type {
+  FetchNftsParams,
+  FormattedNft,
+  NftData,
+  TransferNftParams,
+} from './types.js';
 
-/**
- * Define a more specific type for NFT data
- */
-type NftData = {
-  contract?: { address?: string };
-  tokenId?: string;
-  id?: { tokenId?: string };
-  title?: string;
-  name?: string;
-  description?: string;
-  tokenType?: string;
-  media?: Array<{ gateway?: string; raw?: string }>;
-  image?: string;
-  metadata?: Record<string, unknown>;
-};
+// Extend viem's ERC721 ABI with supportsInterface function
+const erc721Abi = [
+  ...viem_erc721Abi,
+  {
+    inputs: [{ internalType: 'bytes4', name: 'interfaceId', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 /**
  * Format NFT data from Alchemy API into a more usable format
- * @param params Parameters for formatting NFT data
- * @param params.nftData The raw NFT data from Alchemy API
+ * @param nftData The raw NFT data from Alchemy API
  * @returns Formatted NFT data
  */
-export function formatNftData(params: {
+export function formatNftData({
+  nftData,
+}: {
   nftData: Record<string, unknown>;
-}): Array<Record<string, unknown>> {
-  const { nftData } = params;
+}): Array<FormattedNft> {
   if (!nftData || !nftData.ownedNfts || !Array.isArray(nftData.ownedNfts)) {
     return [];
   }
@@ -55,12 +57,12 @@ export function formatNftData(params: {
  */
 export async function detectNftStandard(
   wallet: PublicActions,
-  contractAddress: string,
+  contractAddress: `0x${string}`,
 ): Promise<'ERC721' | 'ERC1155' | 'UNKNOWN'> {
   try {
     // ERC721 interface ID: 0x80ac58cd
     const isErc721 = await wallet.readContract({
-      address: contractAddress as `0x${string}`,
+      address: contractAddress,
       abi: erc721Abi,
       functionName: 'supportsInterface',
       args: ['0x80ac58cd'],
@@ -72,7 +74,7 @@ export async function detectNftStandard(
 
     // ERC1155 interface ID: 0xd9b67a26
     const isErc1155 = await wallet.readContract({
-      address: contractAddress as `0x${string}`,
+      address: contractAddress,
       abi: erc1155Abi,
       functionName: 'supportsInterface',
       args: ['0xd9b67a26'],
@@ -94,16 +96,14 @@ export async function detectNftStandard(
 
 /**
  * Helper function to fetch NFTs from Alchemy API
- * @param params Parameters for fetching NFTs
- * @param params.ownerAddress The address to fetch NFTs for
- * @param params.limit Maximum number of NFTs to fetch
+ * @param ownerAddress The address to fetch NFTs for
+ * @param limit Maximum number of NFTs to fetch
  * @returns The NFT data from Alchemy API
  */
-export async function fetchNftsFromAlchemy(params: {
-  ownerAddress: string;
-  limit?: number;
-}): Promise<Record<string, unknown>> {
-  const { ownerAddress, limit = 50 } = params;
+export async function fetchNftsFromAlchemy({
+  ownerAddress,
+  limit = 50,
+}: FetchNftsParams): Promise<Record<string, unknown>> {
   // Access environment variables safely
   const apiKey =
     typeof process !== 'undefined' ? process.env.ALCHEMY_API_KEY : undefined;
@@ -136,18 +136,20 @@ export async function fetchNftsFromAlchemy(params: {
 
 /**
  * Transfer an NFT from one address to another
- * @param params Parameters for the transfer
+ * @param wallet Wallet client with public actions
+ * @param contractAddress Address of the NFT contract
+ * @param tokenId ID of the token to transfer
+ * @param toAddress Address to transfer the NFT to
+ * @param amount Amount of tokens to transfer (for ERC1155)
  * @returns Transaction hash
  */
-export async function transferNft(params: {
-  wallet: WalletClient & PublicActions;
-  contractAddress: string;
-  tokenId: string;
-  toAddress: string;
-  amount?: string;
-}): Promise<`0x${string}`> {
-  const { wallet, contractAddress, tokenId, toAddress, amount = '1' } = params;
-
+export async function transferNft({
+  wallet,
+  contractAddress,
+  tokenId,
+  toAddress,
+  amount = '1',
+}: TransferNftParams): Promise<`0x${string}`> {
   try {
     // Detect the NFT standard
     const nftStandard = await detectNftStandard(wallet, contractAddress);
@@ -161,9 +163,7 @@ export async function transferNft(params: {
     // Get the wallet address
     const [fromAddress] = await wallet.getAddresses();
 
-    // Convert addresses and values to the correct format
-    const contractAddressHex = contractAddress as `0x${string}`;
-    const toAddressHex = toAddress as `0x${string}`;
+    // Convert values to the correct format
     const tokenIdBigInt = BigInt(tokenId);
     const amountBigInt = BigInt(amount);
 
@@ -172,20 +172,20 @@ export async function transferNft(params: {
     if (nftStandard === 'ERC721') {
       // Transfer ERC721 NFT
       hash = await wallet.writeContract({
-        address: contractAddressHex,
+        address: contractAddress,
         abi: erc721Abi,
         functionName: 'safeTransferFrom',
-        args: [fromAddress, toAddressHex, tokenIdBigInt],
+        args: [fromAddress, toAddress, tokenIdBigInt],
         chain: null,
         account: fromAddress,
       });
     } else {
       // Transfer ERC1155 NFT
       hash = await wallet.writeContract({
-        address: contractAddressHex,
+        address: contractAddress,
         abi: erc1155Abi,
         functionName: 'safeTransferFrom',
-        args: [fromAddress, toAddressHex, tokenIdBigInt, amountBigInt, '0x'],
+        args: [fromAddress, toAddress, tokenIdBigInt, amountBigInt, '0x'],
         chain: null,
         account: fromAddress,
       });

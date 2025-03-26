@@ -1,10 +1,10 @@
-import { isAddress, type PublicActions, type WalletClient } from 'viem';
+import { isAddress } from 'viem';
+import type { PublicActions, WalletClient } from 'viem';
 import { base } from 'viem/chains';
 import type { z } from 'zod';
 import { constructBaseScanUrl } from '../utils/index.js';
 import { ListNftsSchema, TransferNftSchema } from './schemas.js';
-
-// All functions will be dynamically imported to avoid circular dependencies
+import { fetchNftsFromAlchemy, formatNftData, transferNft } from './utils.js';
 
 export async function listNftsHandler(
   wallet: WalletClient & PublicActions,
@@ -15,9 +15,6 @@ export async function listNftsHandler(
     if (!isAddress(args.ownerAddress)) {
       throw new Error(`Invalid owner address: ${args.ownerAddress}`);
     }
-
-    // Import the listNfts function dynamically to avoid circular dependencies
-    const { fetchNftsFromAlchemy, formatNftData } = await import('./utils.js');
 
     // Fetch NFTs from Alchemy API
     const nftData = await fetchNftsFromAlchemy({
@@ -64,9 +61,6 @@ export async function transferNftHandler(
     if (!isAddress(args.toAddress)) {
       throw new Error(`Invalid recipient address: ${args.toAddress}`);
     }
-
-    // Import the transferNft function dynamically to avoid circular dependencies
-    const { transferNft } = await import('./utils.js');
 
     // Execute the transfer
     const txHash = await transferNft({
