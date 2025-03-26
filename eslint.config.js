@@ -21,7 +21,7 @@ export default [
   },
   {
     rules: {
-       // TypeScript specific rules
+      // TypeScript specific rules
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_' },
