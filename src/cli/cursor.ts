@@ -13,8 +13,8 @@ export async function configureCursor({
   const cursorConfigPath = path.join(os.homedir(), '.cursor', 'mcp.json');
 
   const baseMcpConfig = {
-    command: 'base-mcp',
-    args: [],
+    command: 'npx',
+    args: ['base-mcp'],
     env: {
       COINBASE_API_KEY_NAME: cdpKeyId,
       COINBASE_API_PRIVATE_KEY: cdpSecret,
