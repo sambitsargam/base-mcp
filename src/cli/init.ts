@@ -30,6 +30,16 @@ const TOOLS_WITH_REQUIRED_KEYS: ToolWithKeys[] = [
       },
     ],
   },
+  {
+    name: 'Alchemy (NFTs)',
+    keys: [
+      {
+        name: 'ALCHEMY_API_KEY',
+        label: 'Alchemy API Key',
+        required: true,
+      },
+    ],
+  },
 ];
 
 const baseBlue = chalk.hex('#0052FF');
