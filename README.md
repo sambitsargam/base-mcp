@@ -256,6 +256,18 @@ Example query to Claude:
 
 > "Deploy a simple ERC20 token contract for me."
 
+### check-address-reputation
+
+Checks the reputation of an address.
+
+Parameters:
+
+- `address`: The Ethereum address to check
+
+Example query to Claude:
+
+> "What's the reputation of 0x1234567890abcdef1234567890abcdef12345678?"
+
 ### get_morpho_vaults
 
 Gets the vaults for a given asset on Morpho.
