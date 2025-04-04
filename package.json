@@ -1,6 +1,6 @@
 {
   "name": "base-mcp",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "A Model Context Protocol (MCP) server that provides onchain tools for Claude AI, allowing it to interact with the Base blockchain and Coinbase API",
   "bin": "./build/index.js",
   "type": "module",
@@ -41,6 +41,7 @@
     "@coinbase/onchainkit": "^0.37.6",
     "@inquirer/prompts": "^7.4.0",
     "@modelcontextprotocol/sdk": "^1.6.1",
+    "@privy-io/public-api": "^2.20.5",
     "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
     "graphql": "^16.10.0",
@@ -69,5 +70,10 @@
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1",
     "zod-to-json-schema": "^3.24.4"
+  },
+  "overrides": {
+    "@coinbase/agentkit-model-context-protocol": {
+      "@coinbase/agentkit": "^0.0.0-nightly-20250403210430"
+    }
   }
 }
