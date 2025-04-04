@@ -4,7 +4,6 @@ import {
   cdpApiActionProvider,
   cdpWalletActionProvider,
   CdpWalletProvider,
-  flaunchActionProvider,
   morphoActionProvider,
   walletActionProvider,
 } from '@coinbase/agentkit';
@@ -28,6 +27,7 @@ import { mnemonicToAccount } from 'viem/accounts';
 import { base } from 'viem/chains';
 import { chainIdToCdpNetworkId, chainIdToChain } from './chains.js';
 import { baseMcpTools, toolToHandler } from './tools/index.js';
+import { getActionProvidersWithRequiredEnvVars } from './utils.js';
 import { version } from './version.js';
 
 export async function main() {
@@ -83,7 +83,7 @@ export async function main() {
         apiKeyName,
         apiKeyPrivateKey: privateKey,
       }),
-      flaunchActionProvider(),
+      ...getActionProvidersWithRequiredEnvVars(),
     ],
   });
 
