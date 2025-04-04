@@ -4,6 +4,7 @@ import {
   cdpApiActionProvider,
   cdpWalletActionProvider,
   CdpWalletProvider,
+  flaunchActionProvider,
   morphoActionProvider,
   walletActionProvider,
 } from '@coinbase/agentkit';
@@ -82,6 +83,7 @@ export async function main() {
         apiKeyName,
         apiKeyPrivateKey: privateKey,
       }),
+      flaunchActionProvider(),
     ],
   });
 
