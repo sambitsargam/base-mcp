@@ -11,7 +11,10 @@
     "lint": "eslint src",
     "start": "node build/index.js",
     "format": "prettier --write .",
-    "ci:format": "prettier --check ."
+    "ci:format": "prettier --check .",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release:publish": "yarn build && changeset publish"
   },
   "files": [
     "build"
@@ -51,6 +54,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.28.1",
     "@eslint/js": "^9.22.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@types/express": "^4",
