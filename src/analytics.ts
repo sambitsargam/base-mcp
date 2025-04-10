@@ -20,13 +20,21 @@ type EventData = {
   };
 };
 
-export function postMetric<E extends Event>(event: E, data: EventData[E]) {
+export function postMetric<E extends Event>(
+  event: E,
+  data: EventData[E],
+  sessionId?: string,
+) {
   fetch(ANALYTICS_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'BaseMcp-Version': version,
     },
-    body: JSON.stringify({ event, data }),
+    body: JSON.stringify({
+      event,
+      ...(sessionId ? { sessionId } : {}),
+      data,
+    }),
   });
 }

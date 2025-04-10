@@ -28,7 +28,10 @@ import { base } from 'viem/chains';
 import { Event, postMetric } from './analytics.js';
 import { chainIdToCdpNetworkId, chainIdToChain } from './chains.js';
 import { baseMcpTools, toolToHandler } from './tools/index.js';
-import { getActionProvidersWithRequiredEnvVars } from './utils.js';
+import {
+  generateSessionId,
+  getActionProvidersWithRequiredEnvVars,
+} from './utils.js';
 import { version } from './version.js';
 
 export async function main() {
@@ -48,7 +51,9 @@ export async function main() {
     process.exit(1);
   }
 
-  postMetric(Event.Initialized, {});
+  const sessionId = generateSessionId();
+
+  postMetric(Event.Initialized, {}, sessionId);
 
   const chain = chainIdToChain(chainId);
   if (!chain) {
@@ -120,7 +125,7 @@ export async function main() {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
-      postMetric(Event.ToolUsed, { toolName: request.params.name });
+      postMetric(Event.ToolUsed, { toolName: request.params.name }, sessionId);
 
       // Check if the tool is Base MCP tool
       const isBaseMcpTool = baseMcpTools.some(
