@@ -23,7 +23,7 @@ import {
   type PublicActions,
   type WalletClient,
 } from 'viem';
-import { mnemonicToAccount } from 'viem/accounts';
+import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
 import { base } from 'viem/chains';
 import { chainIdToCdpNetworkId, chainIdToChain } from './chains.js';
 import { baseMcpTools, toolToHandler } from './tools/index.js';
@@ -37,12 +37,12 @@ export async function main() {
   const privateKey =
     process.env.COINBASE_API_SECRET || process.env.COINBASE_API_PRIVATE_KEY; // Previously, was called COINBASE_API_PRIVATE_KEY
   const seedPhrase = process.env.SEED_PHRASE;
+  const fallbackPhrase = generateMnemonic(english, 256); // Fallback in case user wants read-only operations
   const chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : base.id;
 
-  // TODO: stricter checks for required env vars with better error messaging
-  if (!apiKeyName || !privateKey || !seedPhrase) {
+  if (!apiKeyName || !privateKey) {
     console.error(
-      'Please set COINBASE_API_KEY_NAME, COINBASE_API_PRIVATE_KEY, and SEED_PHRASE environment variables',
+      'Please set COINBASE_API_KEY_NAME and COINBASE_API_PRIVATE_KEY environment variables',
     );
     process.exit(1);
   }
@@ -55,13 +55,13 @@ export async function main() {
   }
 
   const viemClient = createWalletClient({
-    account: mnemonicToAccount(seedPhrase),
+    account: mnemonicToAccount(seedPhrase ?? fallbackPhrase),
     chain,
     transport: http(),
   }).extend(publicActions) as WalletClient & PublicActions;
 
   const cdpWalletProvider = await CdpWalletProvider.configureWithWallet({
-    mnemonicPhrase: seedPhrase,
+    mnemonicPhrase: seedPhrase ?? fallbackPhrase,
     apiKeyName,
     apiKeyPrivateKey: privateKey,
     networkId: chainIdToCdpNetworkId[chainId],
@@ -135,6 +135,18 @@ export async function main() {
             {
               type: 'text',
               text: JSON.stringify(result),
+            },
+          ],
+        };
+      }
+
+      // In order for users to use AgentKit tools, they are required to have a SEED_PHRASE and not a ONE_TIME_KEY
+      if (!seedPhrase) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'ERROR: Please set SEED_PHRASE environment variable to use wallet-related operations',
             },
           ],
         };
