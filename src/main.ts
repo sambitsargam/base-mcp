@@ -23,7 +23,7 @@ import {
   type PublicActions,
   type WalletClient,
 } from 'viem';
-import { mnemonicToAccount } from 'viem/accounts';
+import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
 import { base } from 'viem/chains';
 import { chainIdToCdpNetworkId, chainIdToChain } from './chains.js';
 import { baseMcpTools, toolToHandler } from './tools/index.js';
@@ -36,13 +36,12 @@ export async function main() {
     process.env.COINBASE_API_KEY_ID || process.env.COINBASE_API_KEY_NAME; // Previously, was called COINBASE_API_KEY_NAME
   const privateKey =
     process.env.COINBASE_API_SECRET || process.env.COINBASE_API_PRIVATE_KEY; // Previously, was called COINBASE_API_PRIVATE_KEY
-  const seedPhrase = process.env.SEED_PHRASE;
+  const seedPhrase = process.env.SEED_PHRASE ?? generateMnemonic(english, 256); // Fallback in case user wants read-only operations
   const chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : base.id;
 
-  // TODO: stricter checks for required env vars with better error messaging
-  if (!apiKeyName || !privateKey || !seedPhrase) {
+  if (!apiKeyName || !privateKey) {
     console.error(
-      'Please set COINBASE_API_KEY_NAME, COINBASE_API_PRIVATE_KEY, and SEED_PHRASE environment variables',
+      'Please set COINBASE_API_KEY_NAME, COINBASE_API_PRIVATE_KEY, environment variables',
     );
     process.exit(1);
   }
