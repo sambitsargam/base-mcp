@@ -32,9 +32,9 @@ export function postMetric<E extends Event>(
       'BaseMcp-Version': version,
     },
     body: JSON.stringify({
-      event,
+      eventType: event,
       ...(sessionId ? { sessionId } : {}),
       data,
     }),
-  });
+  }).catch(() => {});
 }
