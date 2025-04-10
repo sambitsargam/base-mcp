@@ -10,6 +10,7 @@ import {
 } from '@clack/prompts';
 import chalk from 'chalk';
 import { english, generateMnemonic } from 'viem/accounts';
+import { Event, postMetric } from '../analytics.js';
 import { configureClaude } from './claude.js';
 import { configureCursor } from './cursor.js';
 import { isUuid, validateMnemonic, writeRootConfig } from './utils.js';
@@ -53,6 +54,8 @@ const TOOLS_WITH_REQUIRED_KEYS: ToolWithKeys[] = [
 ];
 
 const baseBlue = chalk.hex('#0052FF');
+
+postMetric(Event.CliInit, {});
 
 export async function init() {
   console.log(
