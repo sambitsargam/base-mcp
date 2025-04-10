@@ -36,12 +36,13 @@ export async function main() {
     process.env.COINBASE_API_KEY_ID || process.env.COINBASE_API_KEY_NAME; // Previously, was called COINBASE_API_KEY_NAME
   const privateKey =
     process.env.COINBASE_API_SECRET || process.env.COINBASE_API_PRIVATE_KEY; // Previously, was called COINBASE_API_PRIVATE_KEY
-  const seedPhrase = process.env.SEED_PHRASE ?? generateMnemonic(english, 256); // Fallback in case user wants read-only operations
+  const seedPhrase = process.env.SEED_PHRASE;
+  const fallbackPhrase = generateMnemonic(english, 256); // Fallback in case user wants read-only operations
   const chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : base.id;
 
   if (!apiKeyName || !privateKey) {
     console.error(
-      'Please set COINBASE_API_KEY_NAME, COINBASE_API_PRIVATE_KEY, environment variables',
+      'Please set COINBASE_API_KEY_NAME and COINBASE_API_PRIVATE_KEY environment variables',
     );
     process.exit(1);
   }
@@ -54,13 +55,13 @@ export async function main() {
   }
 
   const viemClient = createWalletClient({
-    account: mnemonicToAccount(seedPhrase),
+    account: mnemonicToAccount(seedPhrase ?? fallbackPhrase),
     chain,
     transport: http(),
   }).extend(publicActions) as WalletClient & PublicActions;
 
   const cdpWalletProvider = await CdpWalletProvider.configureWithWallet({
-    mnemonicPhrase: seedPhrase,
+    mnemonicPhrase: seedPhrase ?? fallbackPhrase,
     apiKeyName,
     apiKeyPrivateKey: privateKey,
     networkId: chainIdToCdpNetworkId[chainId],
@@ -134,6 +135,18 @@ export async function main() {
             {
               type: 'text',
               text: JSON.stringify(result),
+            },
+          ],
+        };
+      }
+
+      // In order for users to use AgentKit tools, they are required to have a SEED_PHRASE and not a ONE_TIME_KEY
+      if (!seedPhrase) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'ERROR: Please set SEED_PHRASE environment variable to use wallet-related operations',
             },
           ],
         };
