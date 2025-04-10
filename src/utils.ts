@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { flaunchActionProvider } from '@coinbase/agentkit';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
@@ -62,4 +63,8 @@ export function getActionProvidersWithRequiredEnvVars() {
   }
 
   return [];
+}
+
+export function generateSessionId(): string {
+  return crypto.randomUUID();
 }
