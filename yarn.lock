@@ -3124,7 +3124,7 @@ __metadata:
     zod: "npm:^3.24.2"
     zod-to-json-schema: "npm:^3.24.4"
   bin:
-    base-mcp: ./build/index.js
+    base-mcp: build/index.js
   languageName: unknown
   linkType: soft
 
