@@ -27,7 +27,9 @@ import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
 import { base } from 'viem/chains';
 import { Event, postMetric } from './analytics.js';
 import { chainIdToCdpNetworkId, chainIdToChain } from './chains.js';
+import { baseMcpContractActionProvider } from './tools/contracts/index.js';
 import { baseMcpTools, toolToHandler } from './tools/index.js';
+import { baseMcpMorphoActionProvider } from './tools/morpho/index.js';
 import {
   generateSessionId,
   getActionProvidersWithRequiredEnvVars,
@@ -92,6 +94,10 @@ export async function main() {
         apiKeyPrivateKey: privateKey,
       }),
       ...getActionProvidersWithRequiredEnvVars(),
+
+      // Base MCP Action Providers
+      baseMcpMorphoActionProvider(),
+      baseMcpContractActionProvider(),
     ],
   });
 
@@ -118,8 +124,9 @@ export async function main() {
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     console.error('Received ListToolsRequest');
+
     return {
-      tools: [...baseMcpTools.map((tool) => tool.definition), ...tools],
+      tools: [...baseMcpTools, ...tools],
     };
   });
 
