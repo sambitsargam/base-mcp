@@ -16,21 +16,16 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import * as dotenv from 'dotenv';
-import {
-  createWalletClient,
-  http,
-  publicActions,
-  type PublicActions,
-  type WalletClient,
-} from 'viem';
-import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
+import { english, generateMnemonic } from 'viem/accounts';
 import { base } from 'viem/chains';
 import { Event, postMetric } from './analytics.js';
 import { chainIdToCdpNetworkId, chainIdToChain } from './chains.js';
 import { baseMcpContractActionProvider } from './tools/contracts/index.js';
-import { baseMcpTools, toolToHandler } from './tools/index.js';
+import { baseMcpErc20ActionProvider } from './tools/erc20/index.js';
 import { baseMcpMorphoActionProvider } from './tools/morpho/index.js';
+import { baseMcpNftActionProvider } from './tools/nft/index.js';
 import { baseMcpOnrampActionProvider } from './tools/onramp/index.js';
+import { openRouterActionProvider } from './tools/open-router/index.js';
 import {
   generateSessionId,
   getActionProvidersWithRequiredEnvVars,
@@ -65,12 +60,6 @@ export async function main() {
     );
   }
 
-  const viemClient = createWalletClient({
-    account: mnemonicToAccount(seedPhrase ?? fallbackPhrase),
-    chain,
-    transport: http(),
-  }).extend(publicActions) as WalletClient & PublicActions;
-
   const cdpWalletProvider = await CdpWalletProvider.configureWithWallet({
     mnemonicPhrase: seedPhrase ?? fallbackPhrase,
     apiKeyName,
@@ -100,6 +89,9 @@ export async function main() {
       baseMcpMorphoActionProvider(),
       baseMcpContractActionProvider(),
       baseMcpOnrampActionProvider(),
+      baseMcpErc20ActionProvider(),
+      baseMcpNftActionProvider(),
+      openRouterActionProvider(),
     ],
   });
 
@@ -128,36 +120,13 @@ export async function main() {
     console.error('Received ListToolsRequest');
 
     return {
-      tools: [...baseMcpTools, ...tools],
+      tools,
     };
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
       postMetric(Event.ToolUsed, { toolName: request.params.name }, sessionId);
-
-      // Check if the tool is Base MCP tool
-      const isBaseMcpTool = baseMcpTools.some(
-        (tool) => tool.definition.name === request.params.name,
-      );
-
-      if (isBaseMcpTool) {
-        const tool = toolToHandler[request.params.name];
-        if (!tool) {
-          throw new Error(`Tool ${request.params.name} not found`);
-        }
-
-        const result = await tool(viemClient, request.params.arguments);
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(result),
-            },
-          ],
-        };
-      }
 
       // In order for users to use AgentKit tools, they are required to have a SEED_PHRASE and not a ONE_TIME_KEY
       if (!seedPhrase) {
