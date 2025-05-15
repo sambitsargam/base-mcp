@@ -52,15 +52,31 @@ async function withRetry(operation: () => Promise<any>, retries = MAX_RETRIES): 
   }
 }
 
-// Lazy loading helper
-const lazyLoad = async <T>(provider: () => Promise<T>): Promise<T> => {
-  try {
-    return await provider();
-  } catch (error) {
-    console.error('Error lazy loading provider:', error);
-    throw error;
-  }
-};
+// Parallel loading helper for better performance
+async function loadActionProviders(apiKeyName: string, privateKey: string) {
+  const providers = await Promise.all([
+    basenameActionProvider(),
+    morphoActionProvider(),
+    walletActionProvider(),
+    cdpWalletActionProvider({
+      apiKeyName,
+      apiKeyPrivateKey: privateKey,
+    }),
+    cdpApiActionProvider({
+      apiKeyName,
+      apiKeyPrivateKey: privateKey,
+    }),
+    ...getActionProvidersWithRequiredEnvVars(),
+    baseMcpMorphoActionProvider(),
+    baseMcpContractActionProvider(),
+    baseMcpOnrampActionProvider(),
+    baseMcpErc20ActionProvider(),
+    baseMcpNftActionProvider(),
+    openRouterActionProvider(),
+  ]);
+
+  return providers;
+}
 
 export async function main() {
   dotenv.config();
@@ -94,41 +110,18 @@ export async function main() {
     chainCache.set(chainId, chain);
   }
 
-  // Initialize wallet provider with retry mechanism
-  const cdpWalletProvider = await withRetry(async () => 
-    CdpWalletProvider.configureWithWallet({
-      mnemonicPhrase: seedPhrase ?? fallbackPhrase,
-      apiKeyName,
-      apiKeyPrivateKey: privateKey,
-      networkId: chainIdToCdpNetworkId[chainId],
-    })
-  );
-
-  // Lazy load action providers
-  const actionProviders = [
-    await lazyLoad(() => basenameActionProvider()),
-    await lazyLoad(() => morphoActionProvider()),
-    await lazyLoad(() => walletActionProvider()),
-    await lazyLoad(() => 
-      cdpWalletActionProvider({
+  // Initialize wallet provider and action providers in parallel
+  const [cdpWalletProvider, actionProviders] = await Promise.all([
+    withRetry(async () => 
+      CdpWalletProvider.configureWithWallet({
+        mnemonicPhrase: seedPhrase ?? fallbackPhrase,
         apiKeyName,
         apiKeyPrivateKey: privateKey,
+        networkId: chainIdToCdpNetworkId[chainId],
       })
     ),
-    await lazyLoad(() =>
-      cdpApiActionProvider({
-        apiKeyName,
-        apiKeyPrivateKey: privateKey,
-      })
-    ),
-    ...await Promise.all(getActionProvidersWithRequiredEnvVars().map(provider => lazyLoad(() => provider))),
-    await lazyLoad(() => baseMcpMorphoActionProvider()),
-    await lazyLoad(() => baseMcpContractActionProvider()),
-    await lazyLoad(() => baseMcpOnrampActionProvider()),
-    await lazyLoad(() => baseMcpErc20ActionProvider()),
-    await lazyLoad(() => baseMcpNftActionProvider()),
-    await lazyLoad(() => openRouterActionProvider()),
-  ];
+    loadActionProviders(apiKeyName, privateKey)
+  ]);
 
   const agentKit = await withRetry(async () =>
     AgentKit.from({
